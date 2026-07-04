@@ -1,0 +1,158 @@
+{
+  "admissions": [],
+  "users": [
+    {
+      "id": "student1",
+      "username": "student1",
+      "password": "student123",
+      "full_name": "Rahul Sharma",
+      "role": "student",
+      "class_id": "class10",
+      "admission_number": "MSCC2024001",
+      "parent_name": "Mr. Sharma",
+      "parent_phone": "9876543210"
+    },
+    {
+      "id": "teacher1",
+      "username": "teacher1",
+      "password": "teacher123",
+      "full_name": "Priya Verma",
+      "role": "teacher"
+    }
+  ],
+  "classes": [
+    {
+      "id": "class6",
+      "name": "Class 6",
+      "sort_order": 1
+    },
+    {
+      "id": "class7",
+      "name": "Class 7",
+      "sort_order": 2
+    },
+    {
+      "id": "class8",
+      "name": "Class 8",
+      "sort_order": 3
+    },
+    {
+      "id": "class9",
+      "name": "Class 9",
+      "sort_order": 4
+    },
+    {
+      "id": "class10",
+      "name": "Class 10",
+      "sort_order": 5
+    },
+    {
+      "id": "class11",
+      "name": "Class 11",
+      "sort_order": 6
+    },
+    {
+      "id": "class12",
+      "name": "Class 12",
+      "sort_order": 7
+    }
+  ],
+  "sections": [
+    {
+      "id": "sec6a",
+      "class_id": "class6",
+      "name": "A"
+    },
+    {
+      "id": "sec10a",
+      "class_id": "class10",
+      "name": "A"
+    }
+  ],
+  "notices": [
+    {
+      "id": "n1",
+      "title": "New Session Begins",
+      "content": "Classes for the new academic session start from 15th July.",
+      "target_audience": "all",
+      "is_pinned": true,
+      "published_at": "2026-07-03T11:36:28.556Z"
+    }
+  ],
+  "homework": [],
+  "assignments": [],
+  "study_materials": [],
+  "results": [],
+  "fee_records": [
+    {
+      "id": "fee1",
+      "student_id": "student1",
+      "total_fee": 25000,
+      "paid_amount": 15000,
+      "academic_year": "2025-26"
+    }
+  ],
+  "fee_payments": [
+    {
+      "id": "pay1",
+      "fee_record_id": "fee1",
+      "amount": 15000,
+      "payment_date": "2025-06-01",
+      "payment_method": "cash",
+      "receipt_number": "RCP001"
+    }
+  ],
+  "certificates": [],
+  "courses": [
+    {
+      "id": "c1",
+      "title": "Class 6-8 Foundation",
+      "description": "Strong foundation in Maths, Science and English",
+      "duration": "1 Year",
+      "faculty": "Expert Faculty"
+    },
+    {
+      "id": "c2",
+      "title": "Class 9-10 Board Prep",
+      "description": "Complete board exam preparation with test series",
+      "duration": "2 Years",
+      "faculty": "Senior Teachers"
+    },
+    {
+      "id": "c3",
+      "title": "Class 11-12 Science",
+      "description": "Physics, Chemistry, Maths/Biology for competitive exams",
+      "duration": "2 Years",
+      "faculty": "IIT Alumni"
+    }
+  ],
+  "gallery": [],
+  "toppers": [
+    {
+      "id": "t1",
+      "name": "Ankit Patel",
+      "class_name": "Class 10",
+      "percentage": 96.5,
+      "exam_name": "Board Exam 2025"
+    },
+    {
+      "id": "t2",
+      "name": "Sneha Dubey",
+      "class_name": "Class 12",
+      "percentage": 94.2,
+      "exam_name": "Board Exam 2025"
+    }
+  ],
+  "faqs": [
+    {
+      "id": "f1",
+      "question": "What are the admission timings?",
+      "answer": "Admissions are open Monday to Saturday, 9 AM to 6 PM."
+    },
+    {
+      "id": "f2",
+      "question": "Do you provide study material?",
+      "answer": "Yes, comprehensive study material is provided to all enrolled students."
+    }
+  ]
+}
