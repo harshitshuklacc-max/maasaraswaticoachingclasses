@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { readDb, writeDb, uid, type DbSchema } from "@/lib/db";
-import { saveGalleryFile } from "@/lib/gallery";
+import { saveGalleryFile, deleteGalleryItem } from "@/lib/gallery";
 import { createServiceClientSafe } from "@/lib/supabase/admin";
 
 export type GalleryUploadState = { success?: boolean; error?: string } | null;
@@ -120,17 +120,7 @@ export async function deleteGalleryPhoto(id: string) {
   const db = await readDb();
   const item = db.gallery.find((g) => g.id === id);
 
-  if (item?.image_url.startsWith("/uploads/")) {
-    try {
-      const { unlink } = await import("fs/promises");
-      const pathMod = await import("path");
-      await unlink(pathMod.join(process.cwd(), "public", item.image_url));
-    } catch {
-      /* file may already be removed */
-    }
-  }
-
-  await deleteRecord("gallery", id);
+  await deleteGalleryItem(id, item?.image_url);
   revalidatePath("/");
   revalidatePath("/admin/gallery");
   return { success: true };

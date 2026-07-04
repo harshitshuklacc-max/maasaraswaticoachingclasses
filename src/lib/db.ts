@@ -233,11 +233,15 @@ export async function readDb(): Promise<DbSchema> {
   if (!supabase) return db;
 
   let admissionsRes;
+  let galleryRes;
   try {
-    admissionsRes = await Promise.race([
-      supabase.from("admissions").select("*").order("created_at", { ascending: false }),
+    [admissionsRes, galleryRes] = await Promise.race([
+      Promise.all([
+        supabase.from("admissions").select("*").order("created_at", { ascending: false }),
+        supabase.from("gallery").select("*").eq("is_active", true).order("created_at", { ascending: false }),
+      ]),
       new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("Supabase timeout")), 5000)
+        setTimeout(() => reject(new Error("Supabase timeout")), 8000)
       ),
     ]);
   } catch {
@@ -259,8 +263,14 @@ export async function readDb(): Promise<DbSchema> {
           status: a.status,
           created_at: a.created_at,
         })),
-    // Gallery always from local JSON — avoids Supabase schema dependency
-    gallery: db.gallery,
+    gallery: galleryRes.error
+      ? db.gallery
+      : (galleryRes.data || []).map((g) => ({
+          id: g.id,
+          title: g.title ?? undefined,
+          category: g.category,
+          image_url: g.image_url,
+        })),
   };
 }
 
