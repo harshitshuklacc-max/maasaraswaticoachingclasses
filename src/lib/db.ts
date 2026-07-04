@@ -232,9 +232,17 @@ export async function readDb(): Promise<DbSchema> {
   const supabase = createServiceClientSafe();
   if (!supabase) return db;
 
-  const [admissionsRes] = await Promise.all([
-    supabase.from("admissions").select("*").order("created_at", { ascending: false }),
-  ]);
+  let admissionsRes;
+  try {
+    admissionsRes = await Promise.race([
+      supabase.from("admissions").select("*").order("created_at", { ascending: false }),
+      new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error("Supabase timeout")), 5000)
+      ),
+    ]);
+  } catch {
+    return { ...db, gallery: db.gallery };
+  }
 
   return {
     ...db,

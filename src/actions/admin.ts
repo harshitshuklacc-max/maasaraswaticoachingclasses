@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { readDb, writeDb, uid, type DbSchema } from "@/lib/db";
+import { saveGalleryFile } from "@/lib/gallery";
 import { createServiceClientSafe } from "@/lib/supabase/admin";
+
+export type GalleryUploadState = { success?: boolean; error?: string } | null;
 
 function revalidateAll() {
   revalidatePath("/");
@@ -89,43 +92,28 @@ export async function recordFeePayment(data: {
   return { success: true };
 }
 
-export async function uploadGalleryPhoto(formData: FormData) {
-  const file = formData.get("photo") as File | null;
-  const title = ((formData.get("title") as string) || "").trim();
-  const category = (formData.get("category") as string) || "building";
+export async function uploadGalleryPhoto(
+  _prev: GalleryUploadState,
+  formData: FormData
+): Promise<GalleryUploadState> {
+  try {
+    const file = formData.get("photo");
+    if (!(file instanceof File)) {
+      return { success: false, error: "Please select a photo to upload" };
+    }
 
-  if (!file || file.size === 0) {
-    return { success: false, error: "Please select a photo to upload" };
+    const title = ((formData.get("title") as string) || "").trim();
+    const category = (formData.get("category") as string) || "building";
+
+    await saveGalleryFile(file, title, category);
+
+    revalidatePath("/");
+    revalidatePath("/admin/gallery");
+    return { success: true };
+  } catch (err) {
+    const message = err instanceof Error ? err.message : "Upload failed";
+    return { success: false, error: message };
   }
-
-  const allowed = ["image/jpeg", "image/jpg", "image/png", "image/webp", "image/gif"];
-  if (!allowed.includes(file.type)) {
-    return { success: false, error: "Only JPG, PNG, WEBP or GIF images are allowed" };
-  }
-
-  if (file.size > 5 * 1024 * 1024) {
-    return { success: false, error: "Image must be under 5MB" };
-  }
-
-  const { writeFile, mkdir } = await import("fs/promises");
-  const pathMod = await import("path");
-  const buffer = Buffer.from(await file.arrayBuffer());
-  const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-  const filename = `${uid()}.${ext}`;
-  const uploadDir = pathMod.join(process.cwd(), "public", "uploads", "gallery");
-  await mkdir(uploadDir, { recursive: true });
-  await writeFile(pathMod.join(uploadDir, filename), buffer);
-  const image_url = `/uploads/gallery/${filename}`;
-
-  // Gallery uses local JSON storage (works without Supabase schema migration)
-  await writeDb((db) => ({
-    ...db,
-    gallery: [{ id: uid(), title, category, image_url }, ...db.gallery],
-  }));
-
-  revalidatePath("/");
-  revalidatePath("/admin/gallery");
-  return { success: true };
 }
 
 export async function deleteGalleryPhoto(id: string) {
