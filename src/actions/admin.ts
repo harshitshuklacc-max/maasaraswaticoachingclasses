@@ -112,37 +112,16 @@ export async function uploadGalleryPhoto(formData: FormData) {
   const buffer = Buffer.from(await file.arrayBuffer());
   const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
   const filename = `${uid()}.${ext}`;
+  const uploadDir = pathMod.join(process.cwd(), "public", "uploads", "gallery");
+  await mkdir(uploadDir, { recursive: true });
+  await writeFile(pathMod.join(uploadDir, filename), buffer);
+  const image_url = `/uploads/gallery/${filename}`;
 
-  const supabase = createServiceClientSafe();
-  let image_url: string;
-
-  if (supabase) {
-    const storagePath = `gallery/${filename}`;
-    const { error: uploadError } = await supabase.storage.from("uploads").upload(storagePath, buffer, {
-      contentType: file.type,
-      upsert: false,
-    });
-    if (uploadError) {
-      return { success: false, error: `Storage upload failed: ${uploadError.message}` };
-    }
-    const { data: publicUrl } = supabase.storage.from("uploads").getPublicUrl(storagePath);
-    image_url = publicUrl.publicUrl;
-  } else {
-    const uploadDir = pathMod.join(process.cwd(), "public", "uploads", "gallery");
-    await mkdir(uploadDir, { recursive: true });
-    await writeFile(pathMod.join(uploadDir, filename), buffer);
-    image_url = `/uploads/gallery/${filename}`;
-  }
-
-  if (supabase) {
-    const { error } = await supabase.from("gallery").insert({ title, category, image_url, is_active: true });
-    if (error) return { success: false, error: error.message };
-  } else {
-    await writeDb((db) => ({
-      ...db,
-      gallery: [{ id: uid(), title, category, image_url }, ...db.gallery],
-    }));
-  }
+  // Gallery uses local JSON storage (works without Supabase schema migration)
+  await writeDb((db) => ({
+    ...db,
+    gallery: [{ id: uid(), title, category, image_url }, ...db.gallery],
+  }));
 
   revalidatePath("/");
   revalidatePath("/admin/gallery");
@@ -152,31 +131,18 @@ export async function uploadGalleryPhoto(formData: FormData) {
 export async function deleteGalleryPhoto(id: string) {
   const db = await readDb();
   const item = db.gallery.find((g) => g.id === id);
-  const supabase = createServiceClientSafe();
 
-  if (item) {
-    if (supabase && item.image_url.includes("/storage/v1/object/public/uploads/")) {
-      const marker = "/storage/v1/object/public/uploads/";
-      const storagePath = item.image_url.split(marker)[1];
-      if (storagePath) await supabase.storage.from("uploads").remove([storagePath]);
-    } else if (item.image_url.startsWith("/uploads/")) {
-      try {
-        const { unlink } = await import("fs/promises");
-        const pathMod = await import("path");
-        await unlink(pathMod.join(process.cwd(), "public", item.image_url));
-      } catch {
-        /* file may already be removed */
-      }
+  if (item?.image_url.startsWith("/uploads/")) {
+    try {
+      const { unlink } = await import("fs/promises");
+      const pathMod = await import("path");
+      await unlink(pathMod.join(process.cwd(), "public", item.image_url));
+    } catch {
+      /* file may already be removed */
     }
   }
 
-  if (supabase) {
-    const { error } = await supabase.from("gallery").delete().eq("id", id);
-    if (error) return { success: false, error: error.message };
-  } else {
-    await deleteRecord("gallery", id);
-  }
-
+  await deleteRecord("gallery", id);
   revalidatePath("/");
   revalidatePath("/admin/gallery");
   return { success: true };
